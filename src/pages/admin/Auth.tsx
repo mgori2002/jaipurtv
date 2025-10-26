@@ -1,16 +1,26 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Eye, EyeOff, Lock, Mail, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminAuth = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("sameer@jaipurtv.in");
-  const [password, setPassword] = useState("Aa@12345");
+  const { user, loading, signIn } = useAuth();
+  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "validating">("idle");
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/admin", { replace: true });
+    }
+  }, [loading, user, navigate]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setStatus("validating");
     setMessage(null);
@@ -24,19 +34,33 @@ const AdminAuth = () => {
       return;
     }
 
-    const isValid =
-      trimmedUsername === "sameer@jaipurtv.in" && trimmedPassword === "Aa@12345";
-
-    if (isValid) {
-      window.localStorage.setItem("jaipurtv-admin-auth", JSON.stringify({ authenticatedAt: Date.now() }));
-      setMessage("Authenticated. Lock this route behind a real backend session before launching.");
+    try {
+      await signIn(trimmedUsername, trimmedPassword);
+      toast({ title: "Signed in", description: "Welcome back to JaipurTV Admin." });
       navigate("/admin", { replace: true });
-    } else {
-      setMessage("Incorrect username or password. Try again or update the hard-coded credentials.");
+    } catch (error: any) {
+      console.error("Failed to sign in", error);
+      const errorMessage = error?.code === "auth/invalid-credential"
+        ? "Incorrect email or password."
+        : error?.message ?? "Could not sign in. Please try again.";
+      setMessage(errorMessage);
+      toast({
+        title: "Sign-in failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setStatus("idle");
     }
-
-    setStatus("idle");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 text-muted-foreground">
+        Checking session…
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/40 flex items-center justify-center px-4">
@@ -58,7 +82,7 @@ const AdminAuth = () => {
                 type="text"
                 autoComplete="username"
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="sameer@jaipurtv.in"
+                placeholder="you@example.com"
               />
             </div>
           </label>
@@ -74,7 +98,7 @@ const AdminAuth = () => {
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 className="w-full rounded-xl border border-border bg-background px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Aa@12345"
+                placeholder="Enter your password"
               />
               <button
                 type="button"
@@ -105,8 +129,7 @@ const AdminAuth = () => {
 
         <div className="space-y-2 text-xs text-muted-foreground text-center">
           <p>
-            Successful sign-in drops a short-lived flag in <code>localStorage</code>. Swap this for server-verified
-            sessions when your backend is ready.
+            Authentication is powered by Firebase. Manage admin accounts from the Firebase console.
           </p>
           <p>
             <Link to="/" className="text-primary underline">

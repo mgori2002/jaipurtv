@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSiteContent, VideoEntry, ReelEntry } from "@/context/SiteContentContext";
 import { extractYouTubeId } from "@/components/YouTubeEmbed";
+import { useToast } from "@/hooks/use-toast";
 
 const emptyVideo = (type: VideoEntry["type"]): VideoEntry => ({
   id: "",
@@ -22,13 +23,14 @@ type EditableVideoState = {
 };
 
 const AdminVideos = () => {
-  const { content, updateSection } = useSiteContent();
+  const { content, updateSection, ready } = useSiteContent();
   const [state, setState] = useState<EditableVideoState>({
     videos: content.videos,
     shorts: content.shorts,
   });
   const [reels, setReels] = useState<ReelEntry[]>(content.reels);
   const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setState({
@@ -122,7 +124,7 @@ const AdminVideos = () => {
     };
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     const normalizedVideos: VideoEntry[] = [];
     const normalizedShorts: VideoEntry[] = [];
@@ -158,21 +160,41 @@ const AdminVideos = () => {
       }))
       .filter((entry): entry is ReelEntry => Boolean(entry));
 
-    updateSection("videos", finalVideos);
-    updateSection("shorts", finalShorts);
-    updateSection("reels", finalReels);
-    setState({ videos: finalVideos, shorts: finalShorts });
-    setReels(finalReels);
-    setTimeout(() => setSaving(false), 300);
+    try {
+      await Promise.all([
+        updateSection("videos", finalVideos),
+        updateSection("shorts", finalShorts),
+        updateSection("reels", finalReels),
+      ]);
+      setState({ videos: finalVideos, shorts: finalShorts });
+      setReels(finalReels);
+      toast({ title: "Video library updated", description: "Videos, Shorts, and Reels saved successfully." });
+    } catch (error) {
+      console.error("Failed to save video library", error);
+      toast({
+        title: "Save failed",
+        description: "Could not save the video library. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!ready) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">
+        Loading video library…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <header className="space-y-3">
         <h2 className="text-3xl font-display font-semibold">Video Library</h2>
         <p className="text-muted-foreground max-w-3xl">
-          Manage long-form videos and shorts. Your changes are saved in the browser so you can shape content before
-          wiring a backend or YouTube sync.
+          Manage long-form videos and shorts. Your changes sync to Firebase so the public site updates instantly.
         </p>
       </header>
 
@@ -404,7 +426,7 @@ const AdminVideos = () => {
           {saving ? "Saving..." : "Save Library"}
         </Button>
         <p className="text-sm text-muted-foreground">
-          Entries are stored locally. Hook this up to YouTube Data API or your CMS when ready.
+          Entries sync through your Firebase project; connect YouTube APIs later for automated updates.
         </p>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useSiteContent, GalleryItem } from "@/context/SiteContentContext";
+import { useToast } from "@/hooks/use-toast";
 
 type EditableGalleryItem = GalleryItem;
 
@@ -70,9 +71,10 @@ const normalizeGalleryItem = (item: EditableGalleryItem, index: number): Gallery
 };
 
 const AdminGallery = () => {
-  const { content, updateSection, resetSection } = useSiteContent();
+  const { content, updateSection, resetSection, ready } = useSiteContent();
   const [items, setItems] = useState<EditableGalleryItem[]>(content.gallery);
   const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setItems(content.gallery);
@@ -154,7 +156,7 @@ const AdminGallery = () => {
     setItems((prev) => prev.filter((_, idx) => idx !== index));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     const normalized: GalleryItem[] = [];
 
@@ -165,14 +167,46 @@ const AdminGallery = () => {
       }
     });
 
-    updateSection("gallery", normalized);
-    setItems(normalized);
-    setTimeout(() => setSaving(false), 300);
+    try {
+      await updateSection("gallery", normalized);
+      setItems(normalized);
+      toast({ title: "Gallery updated", description: "Media library saved to Firebase." });
+    } catch (error) {
+      console.error("Failed to save gallery", error);
+      toast({
+        title: "Save failed",
+        description: "Could not save gallery items. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    resetSection("gallery");
+  const handleReset = async () => {
+    setSaving(true);
+    try {
+      await resetSection("gallery");
+      toast({ title: "Gallery reset", description: "Gallery reverted to defaults." });
+    } catch (error) {
+      console.error("Failed to reset gallery", error);
+      toast({
+        title: "Reset failed",
+        description: "Could not reset gallery. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!ready) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">
+        Loading gallery items…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -198,7 +232,7 @@ const AdminGallery = () => {
         <div className="space-y-6">
           {items.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-              Upload cover images or link out to YouTube/Instagram videos. Everything saves locally until you wire the backend.
+              Upload cover images or link out to YouTube/Instagram videos. Edits sync through Firebase instantly.
             </div>
           )}
 
@@ -280,7 +314,7 @@ const AdminGallery = () => {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Uploading converts the file to a data URL stored locally. Large images may impact browser storage limits.
+                    Uploading converts the file to a data URL for preview. Consider moving large assets to Firebase Storage or another CDN.
                   </p>
                 </label>
 
@@ -311,7 +345,7 @@ const AdminGallery = () => {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Videos are also saved as base64 data URLs for previewing. Keep uploads short to avoid exceeding storage limits.
+                      Videos are saved as data URLs for previewing only; offload long clips to a streaming platform when possible.
                     </p>
                   </label>
                 )}
@@ -394,8 +428,7 @@ const AdminGallery = () => {
           Reset to defaults
         </Button>
         <p className="text-sm text-muted-foreground">
-          Changes persist locally via <code>localStorage</code>. Media files are base64-encoded; connect your storage bucket later for
-          durable, large uploads.
+          Changes save to Firebase. For heavy assets, connect Firebase Storage or another media bucket for durability.
         </p>
       </div>
     </div>

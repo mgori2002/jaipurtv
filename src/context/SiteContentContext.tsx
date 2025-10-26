@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
-
-const STORAGE_KEY = "jaipurtv-site-content";
+import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export type HeroStats = {
   label: string;
@@ -136,16 +136,17 @@ export type SiteContent = {
   integrations: IntegrationSettings;
 };
 
-type UpdateSectionFn = <K extends keyof SiteContent>(key: K, value: SiteContent[K]) => void;
-type ResetSectionFn = <K extends keyof SiteContent>(key: K) => void;
+type UpdateSectionFn = <K extends keyof SiteContent>(key: K, value: SiteContent[K]) => Promise<void>;
+type ResetSectionFn = <K extends keyof SiteContent>(key: K) => Promise<void>;
 
 type SiteContentContextValue = {
   content: SiteContent;
+  ready: boolean;
   updateSection: UpdateSectionFn;
   resetSection: ResetSectionFn;
-  resetAll: () => void;
-  updateHero: (data: Partial<HeroContent>) => void;
-  resetHero: () => void;
+  resetAll: () => Promise<void>;
+  updateHero: (data: Partial<HeroContent>) => Promise<void>;
+  resetHero: () => Promise<void>;
 };
 
 export const defaultContent: SiteContent = {
@@ -401,82 +402,158 @@ const mergeSettings = (base: SettingsContent, override?: Partial<SettingsContent
   };
 };
 
+const prepareContentForWrite = (content: SiteContent): Record<string, unknown> =>
+  JSON.parse(JSON.stringify(content)) as Record<string, unknown>;
+
+const mergeWithDefaults = (partial?: Partial<SiteContent>): SiteContent => {
+  if (!partial) return defaultContent;
+  return {
+    ...defaultContent,
+    ...partial,
+    hero: {
+      ...defaultContent.hero,
+      ...partial.hero,
+      stats: partial.hero?.stats ?? defaultContent.hero.stats,
+    },
+    videos: partial.videos ?? defaultContent.videos,
+    shorts: partial.shorts ?? defaultContent.shorts,
+    reels: partial.reels ?? defaultContent.reels,
+    gallery: partial.gallery ?? defaultContent.gallery,
+    posts: partial.posts ?? defaultContent.posts,
+    users: partial.users ?? defaultContent.users,
+    contact: { ...defaultContent.contact, ...partial.contact },
+    settings: mergeSettings(defaultContent.settings, partial.settings),
+    integrations: { ...defaultContent.integrations, ...partial.integrations },
+  };
+};
+
+const contentDocRef = doc(db, "site", "content");
+
 export const SiteContentProvider = ({ children }: { children: ReactNode }) => {
-  const [content, setContent] = useState<SiteContent>(() => {
-    if (typeof window === "undefined") return defaultContent;
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<SiteContent>;
-        return {
-          ...defaultContent,
-          ...parsed,
-          hero: {
-            ...defaultContent.hero,
-            ...parsed.hero,
-            stats: parsed.hero?.stats ?? defaultContent.hero.stats,
-          },
-          videos: parsed.videos ?? defaultContent.videos,
-          shorts: parsed.shorts ?? defaultContent.shorts,
-          reels: parsed.reels ?? defaultContent.reels,
-          gallery: parsed.gallery ?? defaultContent.gallery,
-          posts: parsed.posts ?? defaultContent.posts,
-          users: parsed.users ?? defaultContent.users,
-          contact: { ...defaultContent.contact, ...parsed.contact },
-          settings: mergeSettings(defaultContent.settings, parsed.settings),
-          integrations: { ...defaultContent.integrations, ...parsed.integrations },
-        };
-      }
-    } catch (error) {
-      console.warn("Failed to parse stored site content", error);
-    }
-    return defaultContent;
-  });
+  const [content, setContent] = useState<SiteContent>(defaultContent);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
-  }, [content]);
 
-  const updateSection: UpdateSectionFn = (key, value) => {
-    setContent((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const resetSection: ResetSectionFn = (key) => {
-    setContent((prev) => ({
-      ...prev,
-      [key]: defaultContent[key],
-    }));
-  };
-
-  const updateHero = (data: Partial<HeroContent>) => {
-    setContent((prev) => ({
-      ...prev,
-      hero: {
-        ...prev.hero,
-        ...data,
-        stats: data.stats ?? prev.hero.stats,
+    const unsubscribe = onSnapshot(
+      contentDocRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          setContent(mergeWithDefaults(snapshot.data() as Partial<SiteContent>));
+          setReady(true);
+        } else {
+          const payload = {
+            ...prepareContentForWrite(defaultContent),
+            _updatedAt: serverTimestamp(),
+          } as Record<string, unknown>;
+          void setDoc(contentDocRef, payload).catch((error) => {
+            console.error("Failed to seed site content", error);
+            setReady(true);
+          });
+        }
       },
-    }));
+      (error) => {
+        console.error("Failed to load site content", error);
+        setContent(defaultContent);
+        setReady(true);
+      },
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const persistContent = async (next: SiteContent) => {
+    try {
+      await setDoc(
+        contentDocRef,
+        {
+          ...prepareContentForWrite(next),
+          _updatedAt: serverTimestamp(),
+        } as Record<string, unknown>,
+        { merge: true },
+      );
+    } catch (error) {
+      console.error("Failed to persist site content", error);
+      throw error;
+    }
+  };
+
+  const updateSection: UpdateSectionFn = async (key, value) => {
+    let next: SiteContent | null = null;
+    setContent((prev) => {
+      next = {
+        ...prev,
+        [key]: value,
+      };
+      return next;
+    });
+    if (next) {
+      await persistContent(next);
+    }
+  };
+
+  const resetSection: ResetSectionFn = async (key) => {
+    let next: SiteContent | null = null;
+    setContent((prev) => {
+      next = {
+        ...prev,
+        [key]: defaultContent[key],
+      };
+      return next;
+    });
+    if (next) {
+      await persistContent(next);
+    }
+  };
+
+  const updateHero = async (data: Partial<HeroContent>) => {
+    let next: SiteContent | null = null;
+    setContent((prev) => {
+      next = {
+        ...prev,
+        hero: {
+          ...prev.hero,
+          ...data,
+          stats: data.stats ?? prev.hero.stats,
+        },
+      };
+      return next;
+    });
+    if (next) {
+      await persistContent(next);
+    }
   };
 
   const resetHero = () => resetSection("hero");
 
-  const resetAll = () => setContent(defaultContent);
+  const resetAll = async () => {
+    setContent(defaultContent);
+    const payload = {
+      ...prepareContentForWrite(defaultContent),
+      _updatedAt: serverTimestamp(),
+    } as Record<string, unknown>;
+    try {
+      await setDoc(contentDocRef, payload);
+    } catch (error) {
+      console.error("Failed to reset site content", error);
+      throw error;
+    }
+  };
 
   const value = useMemo<SiteContentContextValue>(
     () => ({
       content,
+      ready,
       updateSection,
       resetSection,
       resetAll,
       updateHero,
       resetHero,
     }),
-    [content],
+    [content, ready],
   );
 
   return <SiteContentContext.Provider value={value}>{children}</SiteContentContext.Provider>;

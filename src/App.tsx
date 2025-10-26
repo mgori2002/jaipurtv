@@ -22,40 +22,43 @@ import AdminContact from "./pages/admin/Contact";
 import AdminAuth from "./pages/admin/Auth";
 import DancingMascot from "@/components/DancingMascot";
 import { SiteContentProvider } from "./context/SiteContentContext";
+import { AuthProvider } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SiteContentProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/videos" element={<Videos />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/admin/login" element={<AdminAuth />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="videos" element={<AdminVideos />} />
-            <Route path="gallery" element={<AdminGallery />} />
-            <Route path="hero" element={<AdminHero />} />
-            <Route path="posts" element={<AdminPosts />} />
-            <Route path="contact" element={<AdminContact />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="settings" element={<AdminSettings />} />
-            <Route path="integrations" element={<AdminIntegrations />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-          </Routes>
-          <DancingMascot />
-        </BrowserRouter>
-      </SiteContentProvider>
+      <AuthProvider>
+        <SiteContentProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/admin/login" element={<AdminAuth />} />
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="videos" element={<AdminVideos />} />
+                <Route path="gallery" element={<AdminGallery />} />
+                <Route path="hero" element={<AdminHero />} />
+                <Route path="posts" element={<AdminPosts />} />
+                <Route path="contact" element={<AdminContact />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="integrations" element={<AdminIntegrations />} />
+              </Route>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <DancingMascot />
+          </BrowserRouter>
+        </SiteContentProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

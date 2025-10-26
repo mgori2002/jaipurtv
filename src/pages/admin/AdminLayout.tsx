@@ -1,6 +1,8 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Menu, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const adminLinks = [
   { name: "Dashboard", to: "." },
@@ -17,18 +19,38 @@ const adminLinks = [
 const AdminLayout = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, loading, signOutUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const authFlag = window.localStorage.getItem("jaipurtv-admin-auth");
-    if (!authFlag) {
+    if (!loading && !user) {
       navigate("/admin/login", { replace: true });
     }
-  }, [navigate]);
+  }, [loading, user, navigate]);
 
-  const handleLogout = () => {
-    window.localStorage.removeItem("jaipurtv-admin-auth");
-    navigate("/admin/login", { replace: true });
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      toast({ title: "Signed out", description: "You have left the JaipurTV control center." });
+    } catch (error) {
+      console.error("Failed to sign out", error);
+      toast({
+        title: "Logout failed",
+        description: "Could not sign out. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      navigate("/admin/login", { replace: true });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 text-muted-foreground">
+        Verifying session…
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 text-foreground">

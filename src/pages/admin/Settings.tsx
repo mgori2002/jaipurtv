@@ -1,10 +1,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useSiteContent, SettingsContent } from "@/context/SiteContentContext";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminSettings = () => {
-  const { content, updateSection } = useSiteContent();
+  const { content, updateSection, ready } = useSiteContent();
   const [settings, setSettings] = useState<SettingsContent>(content.settings);
   const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setSettings(content.settings);
@@ -24,19 +26,38 @@ const AdminSettings = () => {
     });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
-    updateSection("settings", settings);
-    setTimeout(() => setSaving(false), 400);
+    try {
+      await updateSection("settings", settings);
+      toast({ title: "Settings updated", description: "Global settings saved to Firebase." });
+    } catch (error) {
+      console.error("Failed to save settings", error);
+      toast({
+        title: "Save failed",
+        description: "Could not save settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!ready) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">
+        Loading settings…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <header className="space-y-3">
         <h2 className="text-3xl font-display font-semibold">Global Settings</h2>
         <p className="text-muted-foreground max-w-2xl">
-          Configure site-wide options and social integrations. Adjust the Shorts playlist ID here so embeds stay in sync.
+          Configure site-wide options and social integrations. Adjust the Shorts playlist ID here so embeds stay in sync across Firebase-backed content.
         </p>
       </header>
 
@@ -96,7 +117,7 @@ const AdminSettings = () => {
             {saving ? "Saving..." : "Save Settings"}
           </button>
           <p className="text-sm text-muted-foreground">
-            Shorts playlist ID lets the site embed your latest Shorts via playlist embed.
+            Shorts playlist ID lets the site embed your latest Shorts via playlist embed. Changes sync instantly through Firebase.
           </p>
         </div>
       </form>

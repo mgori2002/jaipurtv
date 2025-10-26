@@ -4,11 +4,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useSiteContent, ContactContent } from "@/context/SiteContentContext";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminContact = () => {
-  const { content, updateSection, resetSection } = useSiteContent();
+  const { content, updateSection, resetSection, ready } = useSiteContent();
   const [contact, setContact] = useState<ContactContent>(content.contact);
   const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     setContact(content.contact);
@@ -21,24 +23,56 @@ const AdminContact = () => {
     }));
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
-    updateSection("contact", contact);
-    setTimeout(() => setSaving(false), 400);
+    try {
+      await updateSection("contact", contact);
+      toast({ title: "Contact updated", description: "Contact page content saved." });
+    } catch (error) {
+      console.error("Failed to save contact section", error);
+      toast({
+        title: "Save failed",
+        description: "Could not update contact content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    resetSection("contact");
+  const handleReset = async () => {
+    setSaving(true);
+    try {
+      await resetSection("contact");
+      toast({ title: "Contact reset", description: "Contact content reverted to defaults." });
+    } catch (error) {
+      console.error("Failed to reset contact section", error);
+      toast({
+        title: "Reset failed",
+        description: "Could not reset contact content. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!ready) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">
+        Loading contact settings…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <header className="space-y-3">
         <h2 className="text-3xl font-display font-semibold">Contact Page</h2>
         <p className="text-muted-foreground max-w-2xl">
-          Update the hero headline, contact details, and follow section shown on the public contact page. Changes are
-          saved to local storage so you can iterate without a backend.
+          Update the hero headline, contact details, and follow section shown on the public contact page. Changes sync
+          through Firebase so everyone sees updates instantly.
         </p>
       </header>
 
@@ -162,7 +196,7 @@ const AdminContact = () => {
             Reset to Default
           </Button>
           <p className="text-sm text-muted-foreground">
-            After saving, refresh the public contact page to see your updates.
+            After saving, refresh the public contact page — updates are pulled straight from Firebase.
           </p>
         </div>
       </form>

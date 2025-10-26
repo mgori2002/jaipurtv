@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useSiteContent } from "@/context/SiteContentContext";
+import { useToast } from "@/hooks/use-toast";
 
 type HeroFormState = {
   headline: string;
@@ -17,7 +18,9 @@ const AdminHero = () => {
     content: { hero },
     updateHero,
     resetHero,
+    ready,
   } = useSiteContent();
+  const { toast } = useToast();
 
   const [formState, setFormState] = useState<HeroFormState>(hero);
   const [saving, setSaving] = useState(false);
@@ -50,24 +53,56 @@ const AdminHero = () => {
     });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
-    updateHero({ ...formState });
-    setTimeout(() => setSaving(false), 400);
+    try {
+      await updateHero({ ...formState });
+      toast({ title: "Hero updated", description: "Homepage hero content saved." });
+    } catch (error) {
+      console.error("Failed to update hero", error);
+      toast({
+        title: "Save failed",
+        description: "Could not update hero section. Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    resetHero();
+  const handleReset = async () => {
+    setSaving(true);
+    try {
+      await resetHero();
+      toast({ title: "Hero reset", description: "Reverted to default hero content." });
+    } catch (error) {
+      console.error("Failed to reset hero", error);
+      toast({
+        title: "Reset failed",
+        description: "Could not reset hero section. Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (!ready) {
+    return (
+      <div className="py-20 text-center text-muted-foreground">
+        Loading hero settings…
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <header className="space-y-3">
         <h2 className="text-3xl font-display font-semibold">Hero Section</h2>
         <p className="text-muted-foreground max-w-2xl">
-          Update the homepage hero copy and call-to-actions instantly. Changes are stored in your browser for now, so you
-          can experiment freely before wiring up the backend.
+          Update the homepage hero copy and call-to-actions instantly. Changes sync to Firebase, so your live site stays
+          up-to-date without redeploying.
         </p>
       </header>
 
@@ -198,7 +233,7 @@ const AdminHero = () => {
             Reset to defaults
           </button>
           <p className="text-sm text-muted-foreground">
-            Tip: values persist locally via `localStorage`. Wire to your backend later for multi-user control.
+            Tip: changes save to your Firebase project. Consider enabling versioned backups for peace of mind.
           </p>
         </div>
       </form>
