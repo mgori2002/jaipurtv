@@ -40,9 +40,9 @@ const AdminAuth = () => {
       navigate("/admin", { replace: true });
     } catch (error: any) {
       console.error("Failed to sign in", error);
-      const errorMessage = error?.code === "auth/invalid-credential"
+      const errorMessage = error?.message === "invalid-credentials"
         ? "Incorrect email or password."
-        : error?.message ?? "Could not sign in. Please try again.";
+        : "Could not sign in. Please try again.";
       setMessage(errorMessage);
       toast({
         title: "Sign-in failed",
@@ -129,7 +129,7 @@ const AdminAuth = () => {
 
         <div className="space-y-2 text-xs text-muted-foreground text-center">
           <p>
-            Authentication is powered by Firebase. Manage admin accounts from the Firebase console.
+            Authentication is powered by static admin credentials stored securely with the project.
           </p>
           <p>
             <Link to="/" className="text-primary underline">
