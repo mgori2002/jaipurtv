@@ -22,35 +22,7 @@
       }
     ]
   },
-  "videos": [
-    {
-      "id": "dQw4w9WgXcQ",
-      "title": "Jaipur City Tour 2024",
-      "views": "125K",
-      "duration": "12:45",
-      "type": "video",
-      "category": "Travel",
-      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    },
-    {
-      "id": "dQw4w9WgXcQ",
-      "title": "Street Food of Jaipur",
-      "views": "98K",
-      "duration": "15:20",
-      "type": "video",
-      "category": "Food",
-      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    },
-    {
-      "id": "dQw4w9WgXcQ",
-      "title": "Jaipur Culture & Heritage",
-      "views": "156K",
-      "duration": "18:30",
-      "type": "video",
-      "category": "Culture",
-      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    }
-  ],
+  "videos": [],
   "shorts": [
     {
       "id": "dQw4w9WgXcQ",
