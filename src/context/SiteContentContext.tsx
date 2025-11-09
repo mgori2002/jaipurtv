@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from "react";
+import { Octokit } from "@octokit/rest";
 import siteContentData from "@/config/site-content.json";
 import { useAuth } from "./AuthContext";
 
@@ -189,8 +190,37 @@ const mergeWithDefaults = (partial?: Partial<SiteContent>): SiteContent => {
   };
 };
 
-const API_BASE = (import.meta.env.VITE_CONTENT_API_BASE ?? "").replace(/\/$/, "");
-const CONTENT_ENDPOINT = `${API_BASE}/api/content`;
+const resolveContentEndpoint = () => {
+  const configured = (import.meta.env.VITE_CONTENT_API_BASE ?? "").trim();
+  if (!configured) {
+    // Fallback to GitHub raw URL if available
+    const repo = import.meta.env.VITE_GITHUB_REPO;
+    const branch = import.meta.env.VITE_GITHUB_BRANCH || "main";
+    const path = import.meta.env.CONTENT_FILE_PATH || "content/site-content.json";
+    if (repo) {
+      const [owner, repoName] = repo.split("/");
+      return `https://raw.githubusercontent.com/${owner}/${repoName}/${branch}/${path}`;
+    }
+    return null; // Fallback to bundled content
+  }
+
+  const normalized = configured.replace(/\/$/, "");
+  if (normalized.endsWith("/.netlify/functions/content")) {
+    return normalized;
+  }
+
+  if (normalized.endsWith("/api/content")) {
+    return normalized;
+  }
+
+  return `${normalized}/api/content`;
+};
+
+const CONTENT_ENDPOINT = resolveContentEndpoint();
+
+const toBase64 = (str: string): string => {
+  return btoa(unescape(encodeURIComponent(str)));
+};
 
 const cloneContent = (value: SiteContent): SiteContent => JSON.parse(JSON.stringify(value)) as SiteContent;
 
@@ -203,8 +233,18 @@ export const SiteContentProvider = ({ children }: { children: ReactNode }) => {
     let active = true;
 
     const load = async () => {
+      const endpoint = CONTENT_ENDPOINT;
+      if (!endpoint) {
+        // No endpoint configured, use bundled content
+        if (active) {
+          setContent(cloneContent(defaultContent));
+          setReady(true);
+        }
+        return;
+      }
+
       try {
-        const response = await fetch(CONTENT_ENDPOINT, {
+        const response = await fetch(endpoint, {
           headers: {
             Accept: "application/json",
           },
@@ -214,15 +254,12 @@ export const SiteContentProvider = ({ children }: { children: ReactNode }) => {
           throw new Error(`Request failed with status ${response.status}`);
         }
 
-        const payload = (await response.json()) as { content?: Partial<SiteContent> };
+        const contentText = await response.text();
+        const parsed = JSON.parse(contentText);
 
         if (!active) return;
 
-        if (payload?.content) {
-          setContent(mergeWithDefaults(payload.content));
-        } else {
-          setContent(cloneContent(defaultContent));
-        }
+        setContent(mergeWithDefaults(parsed));
       } catch (error) {
         console.warn("Falling back to bundled site content", error);
         if (active) {
@@ -244,37 +281,72 @@ export const SiteContentProvider = ({ children }: { children: ReactNode }) => {
 
   const persistContent = useCallback(
     async (next: SiteContent, options?: { message?: string }) => {
+      const token = import.meta.env.VITE_GITHUB_TOKEN;
+      const repo = import.meta.env.VITE_GITHUB_REPO;
+      const branch = import.meta.env.VITE_GITHUB_BRANCH || "main";
+      const path = import.meta.env.CONTENT_FILE_PATH || "content/site-content.json";
+
+      if (!token || !repo) {
+        throw new Error("GitHub credentials not configured");
+      }
+
       if (!authHeader) {
         throw new Error("auth-required");
       }
 
-      try {
-        const response = await fetch(CONTENT_ENDPOINT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Basic ${authHeader}`,
-          },
-          body: JSON.stringify({
-            content: next,
-            message: options?.message,
-            email: user?.email,
-          }),
-        });
+      const [owner, repoName] = repo.split("/");
 
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => ({}));
-          const errorMessage = errorPayload?.error ?? `Request failed with status ${response.status}`;
-          throw new Error(errorMessage);
+      const octokit = new Octokit({ auth: token });
+
+      try {
+        const serialized = JSON.stringify(next, null, 2);
+        const encodedContent = toBase64(serialized);
+        const commitMessage = options?.message || "chore(content): update site content";
+
+        let sha: string | undefined;
+
+        try {
+          const existing = await octokit.repos.getContent({
+            owner,
+            repo: repoName,
+            path,
+            ref: branch,
+          });
+
+          if (!Array.isArray(existing.data) && "sha" in existing.data) {
+            sha = existing.data.sha;
+          }
+        } catch (readError: any) {
+          if (readError?.status !== 404) {
+            throw readError;
+          }
         }
+
+        await octokit.repos.createOrUpdateFileContents({
+          owner,
+          repo: repoName,
+          path,
+          branch,
+          message: commitMessage,
+          content: encodedContent,
+          sha,
+          committer: {
+            name: "JaipurTV Bot",
+            email: "bot@jaipurtv.in",
+          },
+          author: {
+            name: user?.name || user?.email || "Admin",
+            email: user?.email || "admin@jaipurtv.in",
+          },
+        });
       } catch (error) {
         if (error instanceof Error && error.message === "Failed to fetch") {
-          throw new Error("content-api-unavailable");
+          throw new Error("github-api-unavailable");
         }
         throw error;
       }
     },
-    [authHeader, user?.email],
+    [authHeader, user?.email, user?.name],
   );
 
   const updateSection: UpdateSectionFn = useCallback(

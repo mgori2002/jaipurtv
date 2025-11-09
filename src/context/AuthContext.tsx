@@ -36,18 +36,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const stored = localStorage.getItem(SESSION_STORAGE_KEY);
     const storedHeader = localStorage.getItem(SESSION_HEADER_KEY);
+    let parsedUser: AuthUser | null = null;
+
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as AuthUser;
-        setUser(parsed);
+        parsedUser = JSON.parse(stored) as AuthUser;
       } catch (error) {
         console.warn("Failed to parse stored admin session", error);
         localStorage.removeItem(SESSION_STORAGE_KEY);
       }
     }
-    if (storedHeader) {
+
+    if (parsedUser && storedHeader) {
+      setUser(parsedUser);
       setAuthHeader(storedHeader);
+    } else if (parsedUser && !storedHeader) {
+      console.info("Discarding stale admin session without auth header");
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+      localStorage.removeItem(SESSION_HEADER_KEY);
+    } else if (!parsedUser && storedHeader) {
+      localStorage.removeItem(SESSION_HEADER_KEY);
     }
+
     setLoading(false);
   }, []);
 
