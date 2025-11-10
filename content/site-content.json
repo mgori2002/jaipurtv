@@ -26,30 +26,13 @@
   "shorts": [
     {
       "id": "dQw4w9WgXcQ",
-      "title": "Hawa Mahal in 60 seconds",
-      "views": "203K",
-      "duration": "0:58",
-      "type": "short",
-      "category": "Travel",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
-    },
-    {
-      "id": "dQw4w9WgXcQ",
-      "title": "Jaipur Street Food Quick Bite",
-      "views": "142K",
-      "duration": "0:45",
-      "type": "short",
-      "category": "Food",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
-    },
-    {
-      "id": "dQw4w9WgXcQ",
       "title": "Traditional Dance Performance",
       "views": "178K",
       "duration": "0:52",
       "type": "short",
       "category": "Culture",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
     }
   ],
   "reels": [
