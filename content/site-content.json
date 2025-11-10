@@ -23,18 +23,7 @@
     ]
   },
   "videos": [],
-  "shorts": [
-    {
-      "id": "dQw4w9WgXcQ",
-      "title": "Traditional Dance Performance",
-      "views": "178K",
-      "duration": "0:52",
-      "type": "short",
-      "category": "Culture",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ",
-      "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-    }
-  ],
+  "shorts": [],
   "reels": [
     {
       "id": "1",
