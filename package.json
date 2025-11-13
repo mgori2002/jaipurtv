@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "api": "tsx watch server/index.ts"
+    "api": "tsx watch server/index.ts",
     "start": "node server/index.ts"
   },
   "dependencies": {
