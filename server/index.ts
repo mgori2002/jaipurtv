@@ -128,7 +128,7 @@ app.post("/api/content", async (req, res) => {
       ref: branch,
     });
 
-    const sha = "data" in existing ? existing.data.sha : undefined;
+    const sha = Array.isArray(content) ? content[0]?.sha : content?.sha;
 
     const { data } = await octokit.repos.createOrUpdateFileContents({
       owner,
