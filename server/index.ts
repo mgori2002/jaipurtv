@@ -99,34 +99,24 @@ app.get("/api/content", async (_req, res) => {
   }
 });
 
-app.post("/api/content", async (req, res) => {
-  if (!ensureAuthorized(req.headers.authorization)) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
-
+app.post("/api/save-content", async (req: any, res: any) => {
   try {
-    const { content, message, email } = req.body as {
-      content: unknown;
-      message?: string;
-      email?: string;
-    };
+    const { content, path: contentPath, email, message } = req.body;
 
-    if (!content) {
-      res.status(400).json({ error: "Missing content payload" });
-      return;
-    }
+    const serialized = JSON.stringify(content, null, 2);
+    const encodedContent = Buffer.from(serialized).toString("base64");
+    const commitMessage = message || "chore(content): update site content";
 
     const existing = await octokit.repos.getContent({
-  owner,
-  repo: repoName,
-  path: contentPath,
-  ref: branch,
-});
+      owner,
+      repo: repoName,
+      path: contentPath,
+      ref: branch,
+    });
 
-// GitHub returns file object in existing.data when path points to a file.
-// If existing.data is an array (directory), sha should be undefined.
-const sha = Array.isArray(existing.data) ? undefined : (existing.data as any).sha;
+    const sha = Array.isArray(existing.data)
+      ? undefined
+      : (existing.data as any).sha;
 
     const { data } = await octokit.repos.createOrUpdateFileContents({
       owner,
