@@ -117,18 +117,16 @@ app.post("/api/content", async (req, res) => {
       return;
     }
 
-    const serialized = JSON.stringify(content, null, 2);
-    const encodedContent = Buffer.from(serialized).toString("base64");
-    const commitMessage = message || "chore(content): update site content";
-
     const existing = await octokit.repos.getContent({
-      owner,
-      repo: repoName,
-      path: contentPath,
-      ref: branch,
-    });
+  owner,
+  repo: repoName,
+  path: contentPath,
+  ref: branch,
+});
 
-    const sha = Array.isArray(content) ? content[0]?.sha : content?.sha;
+// GitHub returns file object in existing.data when path points to a file.
+// If existing.data is an array (directory), sha should be undefined.
+const sha = Array.isArray(existing.data) ? undefined : (existing.data as any).sha;
 
     const { data } = await octokit.repos.createOrUpdateFileContents({
       owner,
