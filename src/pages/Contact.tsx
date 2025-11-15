@@ -23,9 +23,29 @@ const Contact = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+   const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const res = await fetch("/api/contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(formData)
+  });
+
+  if (res.ok) {
     toast({
       title: "Message Sent!",
-      description: "We'll get back to you as soon as possible.",
+      description: "We received your message.",
+    });
+    setFormData({ name: "", email: "", subject: "", message: "" });
+  } else {
+    toast({
+      title: "Error",
+      description: "Failed to send message.",
+      variant: "destructive"
+    });
+  }
+};
     });
     setFormData({ name: "", email: "", subject: "", message: "" });
   };
