@@ -152,6 +152,37 @@ app.post("/api/save-content", async (req: any, res: any) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`GitHub content API listening on port ${port}`);
+app.post("/api/send-email", async (req, res) => {
+  const { name, email, subject, message } = req.body;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: "us2.smtp.mailhostbox.com", 
+      port: 587,
+      secure: false,
+      auth: {
+        user: "contact@jaipurtv.in", // tumhara email
+        pass: "YOUR_PASSWORD",       // is email ka password
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"JaipurTV Website" <contact@jaipurtv.in>`,
+      to: "contact@jaipurtv.in", 
+      subject: `New Contact Form: ${subject}`,
+      html: `
+        <h3>New Contact Message from JaipurTV.in</h3>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong><br>${message}</p>
+      `,
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("EMAIL ERROR:", err);
+    res.status(500).json({ success: false });
+  }
 });
+
