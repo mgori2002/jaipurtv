@@ -13,41 +13,48 @@ const Contact = () => {
   const {
     content: { contact },
   } = useSiteContent();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: ""
   });
+
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // <-- CLEAN, single submit handler (async)
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
 
-  const res = await fetch("/api/contact", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formData)
-  });
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
 
-  if (res.ok) {
-    toast({
-      title: "Message Sent!",
-      description: "We received your message.",
-    });
-    setFormData({ name: "", email: "", subject: "", message: "" });
-  } else {
-    toast({
-      title: "Error",
-      description: "Failed to send message.",
-      variant: "destructive"
-    });
-  }
-};
-    });
-    setFormData({ name: "", email: "", subject: "", message: "" });
+      if (res.ok) {
+        toast({
+          title: "Message Sent!",
+          description: "We received your message.",
+        });
+        setFormData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        const err = await res.json().catch(() => null);
+        toast({
+          title: "Error",
+          description: err?.message || "Failed to send message.",
+          variant: "destructive"
+        });
+      }
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Network error. Try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -60,8 +67,6 @@ const Contact = () => {
   return (
     <div className="min-h-screen">
       <Navigation />
-      
-      {/* Hero Section */}
       <section className="pt-32 pb-12 bg-gradient-to-b from-muted/30 to-background">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center space-y-6 animate-fade-in">
@@ -76,12 +81,12 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Contact Section */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Contact Info */}
+            {/* Left contact info cards (unchanged) */}
             <div className="space-y-6">
+              {/* Email card */}
               <Card className="border-border hover:shadow-elegant transition-smooth">
                 <CardContent className="p-6 space-y-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -99,6 +104,8 @@ const Contact = () => {
                 </CardContent>
               </Card>
 
+              {/* Location, Phone, Business, Socials */}
+              {/* (kept same as before) */}
               <Card className="border-border hover:shadow-elegant transition-smooth">
                 <CardContent className="p-6 space-y-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -197,17 +204,17 @@ const Contact = () => {
                       <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium">
                           Email Address
-                        </label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="sameer@example.com"
-                          required
-                        />
-                      </div>
+                      </label>
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="sameer@example.com"
+                        required
+                      />
+                    </div>
                     </div>
 
                     <div className="space-y-2">
