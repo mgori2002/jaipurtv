@@ -9,21 +9,49 @@
     "trendingBadge": "Trending Now on JaipurTV",
     "stats": [
       {
-        "value": "350K+",
+        "value": "100K+",
         "label": "Subscribers"
       },
       {
-        "value": "550+",
+        "value": "500+",
         "label": "Videos Published"
       },
       {
-        "value": "307M+",
+        "value": "10M+",
         "label": "Lifetime Views"
       }
     ]
   },
   "videos": [],
-  "shorts": [],
+  "shorts": [
+    {
+      "id": "dQw4w9WgXcQ",
+      "title": "Hawa Mahal in 60 seconds",
+      "views": "203K",
+      "duration": "0:58",
+      "type": "short",
+      "category": "Travel",
+      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+    },
+    {
+      "id": "dQw4w9WgXcQ",
+      "title": "Jaipur Street Food Quick Bite",
+      "views": "142K",
+      "duration": "0:45",
+      "type": "short",
+      "category": "Food",
+      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+    },
+    {
+      "id": "dQw4w9WgXcQ",
+      "title": "Traditional Dance Performance",
+      "views": "178K",
+      "duration": "0:52",
+      "type": "short",
+      "category": "Culture",
+      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+    }
+  ],
   "reels": [
     {
       "id": "1",
@@ -56,7 +84,48 @@
       "category": "Culture"
     }
   ],
-  "gallery": [],
+  "gallery": [
+    {
+      "id": "g-1",
+      "type": "image",
+      "title": "Sunrise at Amer Fort",
+      "description": "Morning glow over Amer Fort captured during a shoot.",
+      "imageUrl": "https://images.unsplash.com/photo-1505761671935-60b3a7427bad?w=1200",
+      "sourceUrl": "https://instagram.com/p/example1",
+      "likes": "12.4K",
+      "comments": "312",
+      "category": "Travel",
+      "featured": true,
+      "publishedAt": "2024-01-18"
+    },
+    {
+      "id": "g-2",
+      "type": "image",
+      "title": "Rajasthani Cuisine",
+      "description": "Behind the scenes tasting session with Jaipur's best chefs.",
+      "imageUrl": "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=1200",
+      "sourceUrl": "https://instagram.com/p/example2",
+      "likes": "18.1K",
+      "comments": "842",
+      "category": "Food",
+      "featured": false,
+      "publishedAt": "2024-01-10"
+    },
+    {
+      "id": "g-3",
+      "type": "video",
+      "title": "Behind the Lens: City Night Shoot",
+      "description": "A quick cut of our nighttime shoot across the Pink City skyline.",
+      "imageUrl": "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1200",
+      "videoUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "sourceUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "likes": "22K",
+      "comments": "1.1K",
+      "category": "Behind the Scenes",
+      "featured": true,
+      "publishedAt": "2024-02-02"
+    }
+  ],
   "posts": [
     {
       "id": "p-1",
@@ -114,15 +183,15 @@
     "heroTitle": "Get in Touch",
     "heroHighlight": "We'd love to hear from you!",
     "heroDescription": "Drop us a line or follow us on social media.",
-    "emailLabel": "sameer@jaipurtv.in",
-    "emailAddress": "",
+    "emailLabel": "Email",
+    "emailAddress": "hello@jaipurtv.com",
     "locationLabel": "Location",
     "locationLine1": "Jaipur, Rajasthan",
     "locationLine2": "India",
     "businessLabel": "Business",
     "businessNote": "For collaborations and business inquiries, please email us.",
     "phoneLabel": "Phone",
-    "phoneNumber": "+971 52 9728537",
+    "phoneNumber": "+91 1234567890",
     "followLabel": "Follow us",
     "followNote": "Stay updated on our latest content and behind-the-scenes stories."
   },
