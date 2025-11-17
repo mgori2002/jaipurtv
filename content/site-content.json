@@ -22,7 +22,28 @@
       }
     ]
   },
-  "videos": [],
+  "videos": [
+    {
+      "id": "8jr2BPuszoE",
+      "title": "6 Years Old Kid",
+      "category": "PRANK",
+      "type": "video",
+      "views": "6.7 M",
+      "duration": "5:33",
+      "thumbnail": "https://www.youtube.com/watch?v=8jr2BPuszoE",
+      "url": "https://www.youtube.com/watch?v=8jr2BPuszoE"
+    },
+    {
+      "id": "BgmqYKAUKi8",
+      "title": "EPIC..DRUM WRAPING PRANK ON PUBLIC | GONE WRONG",
+      "category": "General",
+      "type": "video",
+      "views": "5.8 M",
+      "duration": "4:46",
+      "thumbnail": "https://www.youtube.com/watch?v=BgmqYKAUKi8&t=123s",
+      "url": "https://www.youtube.com/watch?v=BgmqYKAUKi8&t=123s"
+    }
+  ],
   "shorts": [
     {
       "id": "dQw4w9WgXcQ",
