@@ -26,40 +26,23 @@
   "shorts": [
     {
       "id": "dQw4w9WgXcQ",
-      "title": "Hawa Mahal in 60 seconds",
-      "views": "203K",
-      "duration": "0:58",
-      "type": "short",
-      "category": "Travel",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
-    },
-    {
-      "id": "dQw4w9WgXcQ",
-      "title": "Jaipur Street Food Quick Bite",
-      "views": "142K",
-      "duration": "0:45",
-      "type": "short",
-      "category": "Food",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
-    },
-    {
-      "id": "dQw4w9WgXcQ",
       "title": "Traditional Dance Performance",
       "views": "178K",
       "duration": "0:52",
       "type": "short",
       "category": "Culture",
-      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+      "url": "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+      "thumbnail": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
     }
   ],
   "reels": [
     {
       "id": "1",
-      "url": "https://www.instagram.com/p/example1/",
+      "url": "https://www.instagram.com/reel/DFS-WTETa4i/?igsh=MWRycDhxbjN2YnQ2Mg==",
       "thumbnail": "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800",
       "caption": "Exploring the Pink City 🌸 #JaipurTV",
-      "likes": "15K",
-      "comments": "234",
+      "likes": "1.6M",
+      "comments": "12.3K",
       "username": "moinjaipurtv",
       "category": "Travel"
     },
